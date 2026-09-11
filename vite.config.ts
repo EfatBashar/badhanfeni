@@ -18,10 +18,26 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: null,
+      filename: "sw.js",
+      devOptions: { enabled: false },
       includeAssets: ["favicon.png", "apple-touch-icon.png", "pwa-icon-192.png", "pwa-icon-512.png"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: { cacheName: "page-navigation", networkTimeoutSeconds: 4 },
+          },
+          {
+            urlPattern: ({ request, url }) =>
+              url.origin === self.location.origin && ["script", "style", "font", "image"].includes(request.destination),
+            handler: "CacheFirst",
+            options: { cacheName: "built-assets" },
+          },
+        ],
       },
       manifest: {
         name: "বাঁধন - ফেনী সরকারি কলেজ ইউনিট",

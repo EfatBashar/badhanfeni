@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
-const PUBLIC_ROUTES = ["/login", "/install", "/reset-password"];
+const PUBLIC_ROUTES = ["/login", "/install", "/reset-password", "/join-donor"];
 
 const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
