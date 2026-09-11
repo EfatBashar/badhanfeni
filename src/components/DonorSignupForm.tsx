@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserPlus, FileUp, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import DonorQrCode from "@/components/DonorQrCode";
 
 interface ParsedDonor {
   name: string;
@@ -184,9 +185,12 @@ const DonorSignupForm = () => {
       <section className="px-4 py-10">
         <div className="mx-auto max-w-md">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-2">
-              <UserPlus className="h-6 w-6 text-primary" />
-              <h2 className="text-xl font-bold text-foreground">ডোনার হিসেবে যোগ দিন</h2>
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <UserPlus className="h-6 w-6 shrink-0 text-primary" />
+                <h2 className="text-xl font-bold text-foreground">ডোনার হিসেবে যোগ দিন</h2>
+              </div>
+              <DonorQrCode />
             </div>
             <p className="mb-5 text-sm text-muted-foreground">
               আপনি রক্তদান করতে চাইলে নিচের তথ্য দিয়ে যোগ দিন।
