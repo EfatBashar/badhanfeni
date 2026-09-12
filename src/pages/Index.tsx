@@ -81,6 +81,17 @@ const Index = () => {
               <LogOut className="h-3 w-3" /> লগআউট
             </button>
           </div>
+          <p className="pt-3 text-xs text-muted-foreground">
+            DEVELOPED BY{" "}
+            <a
+              href="https://www.facebook.com/profile.php?id=61582382462458"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-foreground/70 hover:text-primary transition-colors"
+            >
+              RIHAN CHOWDHURY
+            </a>
+          </p>
         </div>
       </footer>
     </div>
