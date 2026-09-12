@@ -32,9 +32,8 @@ export default defineConfig(({ mode }) => ({
             options: { cacheName: "page-navigation", networkTimeoutSeconds: 4 },
           },
           {
-            urlPattern: ({ request, url }) =>
-              url.origin === (globalThis as typeof globalThis & { location: Location }).location.origin &&
-              ["script", "style", "font", "image"].includes(request.destination),
+            urlPattern: ({ request, sameOrigin }) =>
+              sameOrigin && ["script", "style", "font", "image"].includes(request.destination),
             handler: "CacheFirst",
             options: { cacheName: "built-assets" },
           },
