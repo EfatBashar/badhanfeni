@@ -33,7 +33,8 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: ({ request, url }) =>
-              url.origin === self.location.origin && ["script", "style", "font", "image"].includes(request.destination),
+              url.origin === (globalThis as typeof globalThis & { location: Location }).location.origin &&
+              ["script", "style", "font", "image"].includes(request.destination),
             handler: "CacheFirst",
             options: { cacheName: "built-assets" },
           },
