@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Seo from "@/components/Seo";
+import GenderNameWarning from "@/components/GenderNameWarning";
 
 const emptyForm: DonorRegistration = { name: "", phone: "", blood_group: "", gender: "male" };
 

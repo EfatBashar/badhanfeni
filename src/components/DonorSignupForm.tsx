@@ -11,6 +11,7 @@ import { UserPlus, FileUp, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DonorQrCode from "@/components/DonorQrCode";
+import GenderNameWarning from "@/components/GenderNameWarning";
 
 interface ParsedDonor {
   name: string;
