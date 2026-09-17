@@ -237,7 +237,13 @@ const DonorSignupForm = () => {
                     <SelectItem value="female">মহিলা</SelectItem>
                   </SelectContent>
                 </Select>
-                <GenderNameWarning name={form.name} gender={form.gender} onFix={() => setForm({ ...form, gender: "female" })} />
+                <GenderNameWarning
+                  name={form.name}
+                  gender={form.gender}
+                  onFix={() => setForm({ ...form, gender: "female" })}
+                  onSelectGender={(g) => setForm({ ...form, gender: g })}
+                />
+
               </div>
               <Button className="w-full" onClick={handleSubmit} disabled={loading}>
                 {loading ? "যোগ হচ্ছে..." : "ডোনার হিসেবে যোগ দিন"}

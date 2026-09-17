@@ -35,18 +35,18 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3.8-flash",
+        model: "openai/gpt-6-astra",
+        reasoning_effort: "low",
         messages: [
           {
             role: "system",
             content:
               "You classify the likely gender of Bangladeshi personal names (Bengali or English script). " +
               'Reply with ONLY compact JSON: {"gender":"male"|"female"|"unknown","confidence":0-1,"reason":"short Bengali phrase"}. ' +
-              "Use 'unknown' when the name is genuinely unisex or unrecognizable. Confidence must reflect real certainty.",
+              "Use 'unknown' when the name is genuinely unisex or unrecognizable. Confidence must reflect real certainty. Keep the reason under 8 words.",
           },
           { role: "user", content: `Name: ${name.trim()}` },
         ],
-        temperature: 0,
       }),
     });
 
