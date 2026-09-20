@@ -7,18 +7,31 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, FileUp, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { UserPlus, FileUp, Loader2, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DonorQrCode from "@/components/DonorQrCode";
 import GenderNameWarning from "@/components/GenderNameWarning";
+import { looksFemale } from "@/lib/genderDetect";
 
 interface ParsedDonor {
   name: string;
   phone: string;
   blood_group: string;
-  status?: "pending" | "duplicate" | "added" | "error";
+  gender: string;
+  status: "pending" | "duplicate" | "added" | "error";
 }
+
+const readAsBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result);
+      resolve(result.slice(result.indexOf(",") + 1));
+    };
+    reader.onerror = () => reject(new Error("ফাইল পড়া যায়নি"));
+    reader.readAsDataURL(file);
+  });
 
 const DonorSignupForm = () => {
   const { toast } = useToast();
@@ -30,15 +43,6 @@ const DonorSignupForm = () => {
   const [showPdfDialog, setShowPdfDialog] = useState(false);
   const [addingFromPdf, setAddingFromPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const checkDuplicate = async (phone: string): Promise<boolean> => {
-    const { data } = await supabase
-      .from("donors")
-      .select("id, name")
-      .eq("phone", phone.trim())
-      .limit(1);
-    return (data && data.length > 0);
-  };
 
   const phoneRegex = /^01[3-9][0-9]{8}$/;
 
@@ -60,7 +64,6 @@ const DonorSignupForm = () => {
 
     setLoading(true);
 
-    // Check for duplicate
     const { data: existing } = await supabase
       .from("donors")
       .select("id, name")
@@ -94,62 +97,83 @@ const DonorSignupForm = () => {
     }
   };
 
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
 
-    if (file.type !== "application/pdf") {
-      toast({ title: "ত্রুটি", description: "শুধুমাত্র PDF ফাইল আপলোড করুন", variant: "destructive" });
+    const allowed = files.filter(
+      (f) => f.type === "application/pdf" || f.type.startsWith("image/")
+    );
+
+    if (allowed.length === 0) {
+      toast({ title: "ত্রুটি", description: "শুধু ছবি (JPG/PNG) বা PDF আপলোড করুন", variant: "destructive" });
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     setPdfLoading(true);
 
     try {
-      // Upload to storage
-      const fileName = `upload_${Date.now()}.pdf`;
-      const { error: uploadError } = await supabase.storage
-        .from("donor-pdfs")
-        .upload(fileName, file);
+      const payload = await Promise.all(
+        allowed.map(async (file) => ({
+          name: file.name,
+          mimeType: file.type,
+          base64: await readAsBase64(file),
+        }))
+      );
 
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("donor-pdfs")
-        .getPublicUrl(fileName);
-
-      // Call edge function to parse
       const { data, error } = await supabase.functions.invoke("parse-donor-pdf", {
-        body: { fileUrl: urlData.publicUrl },
+        body: { files: payload },
       });
 
       if (error) throw error;
+      if (data?.error && !(data?.donors?.length)) throw new Error(data.error);
 
-      if (data.donors && data.donors.length > 0) {
-        // Check duplicates for each parsed donor
-        const donorsWithStatus: ParsedDonor[] = await Promise.all(
-          data.donors.map(async (d: ParsedDonor) => {
-            const isDuplicate = await checkDuplicate(d.phone);
-            return { ...d, status: isDuplicate ? "duplicate" : "pending" as const };
-          })
-        );
-        setParsedDonors(donorsWithStatus);
-        setShowPdfDialog(true);
-      } else {
-        toast({ title: "কোনো ডোনার পাওয়া যায়নি", description: "PDF থেকে ডোনারের তথ্য বের করা যায়নি।", variant: "destructive" });
+      const donors = (data?.donors ?? []) as Array<{ name: string; phone: string; blood_group: string }>;
+
+      if (donors.length === 0) {
+        toast({
+          title: "কোনো ডোনার পাওয়া যায়নি",
+          description: "ফাইল থেকে ডোনারের তথ্য বের করা যায়নি। আরও স্পষ্ট ছবি দিয়ে চেষ্টা করুন।",
+          variant: "destructive",
+        });
+        return;
       }
+
+      const phones = donors.map((d) => d.phone);
+      const { data: existing } = await supabase.from("donors").select("phone").in("phone", phones);
+      const existingSet = new Set((existing ?? []).map((d) => d.phone));
+
+      setParsedDonors(
+        donors.map((d) => ({
+          name: d.name,
+          phone: d.phone,
+          blood_group: d.blood_group,
+          gender: looksFemale(d.name) ? "female" : "male",
+          status: existingSet.has(d.phone) ? "duplicate" : "pending",
+        }))
+      );
+      setShowPdfDialog(true);
     } catch (err: any) {
-      toast({ title: "ত্রুটি", description: err.message || "PDF প্রক্রিয়া করতে সমস্যা হয়েছে", variant: "destructive" });
+      toast({ title: "ত্রুটি", description: err.message || "ফাইল প্রক্রিয়া করতে সমস্যা হয়েছে", variant: "destructive" });
     } finally {
       setPdfLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
+  const updateParsed = (index: number, patch: Partial<ParsedDonor>) => {
+    setParsedDonors((prev) => prev.map((d, i) => (i === index ? { ...d, ...patch } : d)));
+  };
+
+  const removeParsed = (index: number) => {
+    setParsedDonors((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const pendingCount = parsedDonors.filter((d) => d.status === "pending").length;
+
   const handleAddParsedDonors = async () => {
-    const pendingDonors = parsedDonors.filter((d) => d.status === "pending");
-    if (pendingDonors.length === 0) {
+    if (pendingCount === 0) {
       toast({ title: "কোনো নতুন ডোনার নেই", description: "সব ডোনার ইতোমধ্যেই তালিকায় আছেন।" });
       return;
     }
@@ -161,10 +185,19 @@ const DonorSignupForm = () => {
     for (let i = 0; i < updated.length; i++) {
       if (updated[i].status !== "pending") continue;
 
+      const name = updated[i].name.trim();
+      const phone = updated[i].phone.trim();
+
+      if (name.length < 2 || !phoneRegex.test(phone) || !bloodGroups.includes(updated[i].blood_group)) {
+        updated[i].status = "error";
+        continue;
+      }
+
       const { error } = await supabase.from("donors").insert({
-        name: updated[i].name,
-        phone: updated[i].phone,
+        name,
+        phone,
         blood_group: updated[i].blood_group,
+        gender: updated[i].gender,
       });
 
       if (error) {
@@ -249,15 +282,18 @@ const DonorSignupForm = () => {
                 {loading ? "যোগ হচ্ছে..." : "ডোনার হিসেবে যোগ দিন"}
               </Button>
 
-              {/* PDF Upload */}
+              {/* File Upload */}
               <div className="border-t border-border pt-4">
-                <p className="mb-3 text-sm font-medium text-foreground">অথবা PDF থেকে ডোনার যোগ করুন</p>
+                <p className="mb-3 text-sm font-medium text-foreground">
+                  অথবা ছবি / PDF থেকে একসাথে ডোনার যোগ করুন
+                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf"
+                  accept="image/*,.pdf"
+                  multiple
                   className="hidden"
-                  onChange={handlePdfUpload}
+                  onChange={handleFileUpload}
                 />
                 <Button
                   variant="outline"
@@ -268,15 +304,18 @@ const DonorSignupForm = () => {
                   {pdfLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      PDF প্রক্রিয়া হচ্ছে...
+                      ফাইল প্রক্রিয়া হচ্ছে...
                     </>
                   ) : (
                     <>
                       <FileUp className="h-4 w-4" />
-                      ডোনার লিস্টের PDF আপলোড করুন
+                      ডোনার লিস্টের ছবি বা PDF আপলোড করুন
                     </>
                   )}
                 </Button>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  একসাথে একাধিক ছবি (লিস্টের কয়েক পাতা) দেওয়া যাবে।
+                </p>
               </div>
             </div>
           </div>
@@ -287,69 +326,106 @@ const DonorSignupForm = () => {
       <Dialog open={showPdfDialog} onOpenChange={setShowPdfDialog}>
         <DialogContent className="max-w-lg max-h-[85vh] p-0">
           <DialogHeader className="p-6 pb-2">
-            <DialogTitle>PDF থেকে প্রাপ্ত ডোনার তালিকা</DialogTitle>
+            <DialogTitle>ফাইল থেকে প্রাপ্ত ডোনার তালিকা</DialogTitle>
             <DialogDescription>
-              {parsedDonors.filter((d) => d.status === "pending").length} জন নতুন ডোনার পাওয়া গেছে
+              {pendingCount} জন নতুন ডোনার পাওয়া গেছে — যোগ করার আগে তথ্য ঠিক করে নিন
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[55vh] px-6">
-            <div className="space-y-2">
+            <div className="space-y-3 pb-2">
               {parsedDonors.map((donor, i) => (
                 <div
                   key={i}
-                  className={`flex items-center justify-between rounded-lg border p-3 text-sm ${
-                    donor.status === "duplicate"
+                  className={`rounded-lg border p-3 text-sm ${
+                    donor.status === "duplicate" || donor.status === "error"
                       ? "border-destructive/30 bg-destructive/5"
                       : donor.status === "added"
                       ? "border-green-500/30 bg-green-500/5"
-                      : donor.status === "error"
-                      ? "border-destructive/30 bg-destructive/5"
                       : "border-border"
                   }`}
                 >
-                  <div>
-                    <p className="font-medium text-foreground">{donor.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {donor.phone} • {donor.blood_group}
-                    </p>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="text-xs">
+                      {donor.status === "duplicate" && (
+                        <span className="flex items-center gap-1 text-destructive">
+                          <XCircle className="h-3.5 w-3.5" /> আগে থেকে আছে
+                        </span>
+                      )}
+                      {donor.status === "added" && (
+                        <span className="flex items-center gap-1 text-green-600">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> যোগ হয়েছে
+                        </span>
+                      )}
+                      {donor.status === "error" && (
+                        <span className="flex items-center gap-1 text-destructive">
+                          <XCircle className="h-3.5 w-3.5" /> ত্রুটি
+                        </span>
+                      )}
+                      {donor.status === "pending" && <span className="text-muted-foreground">নতুন</span>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeParsed(i)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="বাদ দিন"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div className="text-xs">
-                    {donor.status === "duplicate" && (
-                      <span className="flex items-center gap-1 text-destructive">
-                        <XCircle className="h-3.5 w-3.5" /> আগে থেকে আছে
-                      </span>
-                    )}
-                    {donor.status === "added" && (
-                      <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> যোগ হয়েছে
-                      </span>
-                    )}
-                    {donor.status === "error" && (
-                      <span className="flex items-center gap-1 text-destructive">
-                        <XCircle className="h-3.5 w-3.5" /> ত্রুটি
-                      </span>
-                    )}
-                    {donor.status === "pending" && (
-                      <span className="text-muted-foreground">নতুন</span>
-                    )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      className="col-span-2 h-9"
+                      value={donor.name}
+                      disabled={donor.status === "added"}
+                      onChange={(e) => updateParsed(i, { name: e.target.value })}
+                    />
+                    <Input
+                      className="h-9"
+                      value={donor.phone}
+                      disabled={donor.status === "added"}
+                      onChange={(e) => updateParsed(i, { phone: e.target.value })}
+                    />
+                    <Select
+                      value={donor.blood_group}
+                      disabled={donor.status === "added"}
+                      onValueChange={(v) => updateParsed(i, { blood_group: v })}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="গ্রুপ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bloodGroups.map((g) => (
+                          <SelectItem key={g} value={g}>{g}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={donor.gender}
+                      disabled={donor.status === "added"}
+                      onValueChange={(v) => updateParsed(i, { gender: v })}
+                    >
+                      <SelectTrigger className="col-span-2 h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">পুরুষ</SelectItem>
+                        <SelectItem value="female">মহিলা</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               ))}
             </div>
           </ScrollArea>
           <div className="p-6 pt-3 border-t border-border">
-            <Button
-              className="w-full"
-              onClick={handleAddParsedDonors}
-              disabled={addingFromPdf || parsedDonors.filter((d) => d.status === "pending").length === 0}
-            >
+            <Button className="w-full" onClick={handleAddParsedDonors} disabled={addingFromPdf || pendingCount === 0}>
               {addingFromPdf ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   যোগ হচ্ছে...
                 </>
               ) : (
-                `${parsedDonors.filter((d) => d.status === "pending").length} জন নতুন ডোনার যোগ করুন`
+                `${pendingCount} জন নতুন ডোনার যোগ করুন`
               )}
             </Button>
           </div>
