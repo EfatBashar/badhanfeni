@@ -107,6 +107,32 @@ const DonorManagement = () => {
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4" /> যোগ করুন</Button>
           </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>নতুন ডোনার যোগ করুন</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>নাম</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div><Label>ফোন</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div>
+                <Label>রক্তের গ্রুপ</Label>
+                <Select value={form.blood_group} onValueChange={(v) => setForm({ ...form, blood_group: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{bloodGroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>লিঙ্গ</Label>
+                <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">পুরুষ</SelectItem>
+                    <SelectItem value="female">মহিলা</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button className="w-full" onClick={handleAdd}>যোগ করুন</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -166,33 +192,6 @@ const DonorManagement = () => {
           )}
           সব মহিলা লুকান
         </Button>
-      </div>
-          <DialogContent>
-            <DialogHeader><DialogTitle>নতুন ডোনার যোগ করুন</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div><Label>নাম</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div><Label>ফোন</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-              <div>
-                <Label>রক্তের গ্রুপ</Label>
-                <Select value={form.blood_group} onValueChange={(v) => setForm({ ...form, blood_group: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{bloodGroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>লিঙ্গ</Label>
-                <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">পুরুষ</SelectItem>
-                    <SelectItem value="female">মহিলা</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full" onClick={handleAdd}>যোগ করুন</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <div className="rounded-lg border border-border overflow-x-auto">
