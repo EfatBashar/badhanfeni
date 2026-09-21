@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const DonorManagement = () => {
@@ -18,6 +18,29 @@ const DonorManagement = () => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", blood_group: "A+", gender: "male" });
+  const [bulkLoading, setBulkLoading] = useState<string | null>(null);
+
+  const bulkToggleVisibility = async (gender: "male" | "female", makeVisible: boolean) => {
+    const key = `${gender}-${makeVisible ? "show" : "hide"}`;
+    setBulkLoading(key);
+    const affected = (donors ?? []).filter(
+      (d) => d.gender === gender && d.is_visible !== makeVisible
+    ).length;
+    const { error } = await supabase
+      .from("donors")
+      .update({ is_visible: makeVisible })
+      .eq("gender", gender);
+    setBulkLoading(null);
+    if (error) {
+      toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: makeVisible ? "প্রকাশিত" : "লুকানো হয়েছে",
+        description: `${gender === "female" ? "মহিলা" : "পুরুষ"} ডোনার — ${affected} জন আপডেট হয়েছে`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["donors"] });
+    }
+  };
 
   const handleAdd = async () => {
     if (!form.name || !form.phone || !form.blood_group) return;
