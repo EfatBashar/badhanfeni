@@ -107,6 +107,66 @@ const DonorManagement = () => {
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4" /> যোগ করুন</Button>
           </DialogTrigger>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          disabled={bulkLoading === "male-show"}
+          onClick={() => bulkToggleVisibility("male", true)}
+        >
+          {bulkLoading === "male-show" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+          সব পুরুষ দেখান
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          disabled={bulkLoading === "male-hide"}
+          onClick={() => bulkToggleVisibility("male", false)}
+        >
+          {bulkLoading === "male-hide" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <EyeOff className="h-4 w-4" />
+          )}
+          সব পুরুষ লুকান
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          disabled={bulkLoading === "female-show"}
+          onClick={() => bulkToggleVisibility("female", true)}
+        >
+          {bulkLoading === "female-show" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
+          সব মহিলা দেখান
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          disabled={bulkLoading === "female-hide"}
+          onClick={() => bulkToggleVisibility("female", false)}
+        >
+          {bulkLoading === "female-hide" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <EyeOff className="h-4 w-4" />
+          )}
+          সব মহিলা লুকান
+        </Button>
+      </div>
           <DialogContent>
             <DialogHeader><DialogTitle>নতুন ডোনার যোগ করুন</DialogTitle></DialogHeader>
             <div className="space-y-3">
