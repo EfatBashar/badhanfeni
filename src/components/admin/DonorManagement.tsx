@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ImportDonorsFromWeb from "./ImportDonorsFromWeb";
 
 const DonorManagement = () => {
   const { data: donors, isLoading } = useDonors();
@@ -103,10 +104,12 @@ const DonorManagement = () => {
             দৃশ্যমান: {visibleCount} • লুকানো: {hiddenCount}
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="h-4 w-4" /> যোগ করুন</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <ImportDonorsFromWeb />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="h-4 w-4" /> যোগ করুন</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>নতুন ডোনার যোগ করুন</DialogTitle></DialogHeader>
             <div className="space-y-3">
@@ -131,8 +134,9 @@ const DonorManagement = () => {
               </div>
               <Button className="w-full" onClick={handleAdd}>যোগ করুন</Button>
             </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
