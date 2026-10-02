@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Globe, Loader2, Trash2 } from "lucide-react";
+import { Globe, Loader2, Sparkles, Trash2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 // Source: FPI Helping Hand Society (blood-donation-app-f2509.web.app) public donor list
@@ -90,10 +91,47 @@ const ImportDonorsFromWeb = () => {
   const [importing, setImporting] = useState(false);
   const [rows, setRows] = useState<ImportedDonor[]>([]);
 
-  const handleFetch = async () => {
+  const [aiUrl, setAiUrl] = useState("");
+  const [aiText, setAiText] = useState("");
+
+  const fetchWithAI = async (): Promise<ImportedDonor[]> => {
+    const { data, error } = await supabase.functions.invoke("scrape-donors-web", {
+      body: aiText.trim() ? { text: aiText } : { url: aiUrl },
+    });
+    if (error) {
+      let msg = "AI দিয়ে তথ্য আনা যায়নি";
+      try {
+        const body = await (error as { context?: Response }).context?.json();
+        if (body?.error) msg = body.error;
+      } catch { /* */ }
+      throw new Error(msg);
+    }
+    if (data?.error) throw new Error(data.error);
+    const list = (data?.donors ?? []) as Array<Record<string, string>>;
+    return list
+      .filter((d) => d?.name && bloodGroups.includes(d.blood_group))
+      .map((d) => {
+        const phone = normalizePhone(d.phone ?? "");
+        return {
+          name: String(d.name).trim(),
+          phone,
+          blood_group: d.blood_group,
+          gender: d.gender === "female" || looksFemale(d.name) ? "female" : "male",
+          last_donation: null,
+          total_donations: 0,
+          status: phone ? ("new" as const) : ("invalid" as const),
+        };
+      });
+  };
+
+  const handleFetch = async (mode: "fpi" | "ai" = "fpi") => {
+    if (mode === "ai" && !aiUrl.trim() && !aiText.trim()) {
+      toast({ title: "লিংক বা টেক্সট দিন", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
-      const fetched = await fetchAllDonors();
+      const fetched = mode === "ai" ? await fetchWithAI() : await fetchAllDonors();
       const existingPhones = new Set((existingDonors ?? []).map((d) => d.phone));
       const seen = new Set<string>();
       const marked = fetched.map((r) => {
@@ -170,13 +208,35 @@ const ImportDonorsFromWeb = () => {
           <DialogTitle>অন্য ওয়েবসাইট থেকে ডোনার আনুন</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">
-            FPI Helping Hand Society (ফেনী পলিটেকনিক) ওয়েবসাইটের ডোনার তালিকা থেকে তথ্য এনে এখানে যোগ করা হবে।
-          </p>
-          <Button onClick={handleFetch} disabled={loading} className="gap-1.5">
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {rows.length > 0 ? "আবার তথ্য আনুন" : "তথ্য আনুন"}
-          </Button>
+          <div className="rounded-lg border border-border p-3 space-y-2">
+            <p className="text-sm font-medium flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-primary" /> যেকোনো ওয়েবসাইট (AI)
+            </p>
+            <Input
+              placeholder="https://... ওয়েবসাইটের লিংক দিন"
+              value={aiUrl}
+              onChange={(e) => setAiUrl(e.target.value)}
+            />
+            <Textarea
+              placeholder="লিংক কাজ না করলে — পেজের লেখা/টেবিল কপি করে এখানে পেস্ট করুন"
+              value={aiText}
+              onChange={(e) => setAiText(e.target.value)}
+              rows={3}
+            />
+            <Button onClick={() => handleFetch("ai")} disabled={loading} className="gap-1.5 w-full">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              AI দিয়ে ডোনার খুঁজুন
+            </Button>
+          </div>
+          <div className="rounded-lg border border-border p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              FPI Helping Hand Society (ফেনী পলিটেকনিক) ওয়েবসাইটের ডোনার তালিকা
+            </p>
+            <Button variant="outline" onClick={() => handleFetch("fpi")} disabled={loading} className="gap-1.5">
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              FPI থেকে তথ্য আনুন
+            </Button>
+          </div>
 
           {rows.length > 0 && (
             <>
