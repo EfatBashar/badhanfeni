@@ -13,10 +13,6 @@ import { Globe, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
-// Source: FPI Helping Hand Society (blood-donation-app-f2509.web.app) public donor list
-const SRC_API_KEY = "AIzaSyCKSBKWL7p2AgX1qi2kQVLM0c7f4fGStmc";
-const SRC_BASE =
-  "https://firestore.googleapis.com/v1/projects/blood-donation-app-f2509/databases/(default)/documents/artifacts/blood-donation-app-f2509/public/data/donors";
 
 interface ImportedDonor {
   name: string;
@@ -35,52 +31,6 @@ const normalizePhone = (raw: string): string => {
   return /^01[3-9][0-9]{8}$/.test(p) ? p : "";
 };
 
-const fetchAllDonors = async (): Promise<ImportedDonor[]> => {
-  // Anonymous sign-in to the source project (their rules require auth)
-  const authRes = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${SRC_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ returnSecureToken: true }),
-    }
-  );
-  if (!authRes.ok) throw new Error("সোর্স সাইটে সংযোগ ব্যর্থ হয়েছে");
-  const { idToken } = await authRes.json();
-
-  const out: ImportedDonor[] = [];
-  let pageToken: string | null = null;
-  do {
-    const url = new URL(SRC_BASE);
-    url.searchParams.set("pageSize", "300");
-    if (pageToken) url.searchParams.set("pageToken", pageToken);
-    const res = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${idToken}` },
-    });
-    if (!res.ok) throw new Error("ডোনার তালিকা পড়া যায়নি");
-    const data = await res.json();
-    for (const doc of data.documents ?? []) {
-      const f = doc.fields ?? {};
-      const name = f.name?.stringValue?.trim() ?? "";
-      const phone = normalizePhone(f.contact?.stringValue ?? "");
-      const blood_group = f.bloodGroup?.stringValue ?? "";
-      const lastTs = f.lastDonationDate?.timestampValue;
-      const count = f.donationCount?.integerValue ?? f.donationCount?.doubleValue;
-      if (!name || !bloodGroups.includes(blood_group)) continue;
-      out.push({
-        name,
-        phone,
-        blood_group,
-        gender: looksFemale(name) ? "female" : "male",
-        last_donation: lastTs ? lastTs.slice(0, 10) : null,
-        total_donations: count ? Number(count) : 0,
-        status: phone ? "new" : "invalid",
-      });
-    }
-    pageToken = data.nextPageToken ?? null;
-  } while (pageToken);
-  return out;
-};
 
 const ImportDonorsFromWeb = () => {
   const { data: existingDonors } = useDonors();
@@ -124,14 +74,14 @@ const ImportDonorsFromWeb = () => {
       });
   };
 
-  const handleFetch = async (mode: "fpi" | "ai" = "fpi") => {
-    if (mode === "ai" && !aiUrl.trim() && !aiText.trim()) {
+  const handleFetch = async (_mode: "ai" = "ai") => {
+    if (!aiUrl.trim() && !aiText.trim()) {
       toast({ title: "লিংক বা টেক্সট দিন", variant: "destructive" });
       return;
     }
     setLoading(true);
     try {
-      const fetched = mode === "ai" ? await fetchWithAI() : await fetchAllDonors();
+      const fetched = await fetchWithAI();
       const existingPhones = new Set((existingDonors ?? []).map((d) => d.phone));
       const seen = new Set<string>();
       const marked = fetched.map((r) => {
@@ -226,15 +176,6 @@ const ImportDonorsFromWeb = () => {
             <Button onClick={() => handleFetch("ai")} disabled={loading} className="gap-1.5 w-full">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               AI দিয়ে ডোনার খুঁজুন
-            </Button>
-          </div>
-          <div className="rounded-lg border border-border p-3 space-y-2">
-            <p className="text-xs text-muted-foreground">
-              FPI Helping Hand Society (ফেনী পলিটেকনিক) ওয়েবসাইটের ডোনার তালিকা
-            </p>
-            <Button variant="outline" onClick={() => handleFetch("fpi")} disabled={loading} className="gap-1.5">
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              FPI থেকে তথ্য আনুন
             </Button>
           </div>
 
