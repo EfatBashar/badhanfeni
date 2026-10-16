@@ -34,15 +34,27 @@ serve(async (req) => {
     let content = typeof text === "string" ? text.trim() : "";
 
     if (!content && typeof url === "string" && /^https?:\/\//i.test(url.trim())) {
+      const u = url.trim();
+      const hasPhones = (s: string) => /(01[3-9]\d{8}|০১[৩-৯][০-৯]{8})/.test(s.replace(/[\s-]/g, ""));
       try {
-        const r = await fetch(url.trim(), {
+        const r = await fetch(u, {
           headers: { "User-Agent": "Mozilla/5.0 (compatible; BadhonImporter/1.0)", Accept: "text/html,*/*" },
         });
-        if (!r.ok) return json({ error: `পেজটি খোলা যায়নি (${r.status})। টেক্সট কপি করে পেস্ট করুন।` }, 400);
-        content = htmlToText(await r.text());
-      } catch {
-        return json({ error: "পেজটি খোলা যায়নি। টেক্সট কপি করে পেস্ট করুন।" }, 400);
+        if (r.ok) content = htmlToText(await r.text());
+      } catch { /* fallback below */ }
+      // JS-rendered sites: use a rendering reader
+      if (!hasPhones(content)) {
+        try {
+          const r2 = await fetch(`https://r.jina.ai/${u}`, { headers: { "X-Timeout": "40" } });
+          if (r2.ok) {
+            const t = await r2.text();
+            if (t.length > content.length || hasPhones(t)) content = t;
+          }
+        } catch { /* ignore */ }
       }
+      if (!content) return json({ error: "পেজটি খোলা যায়নি। টেক্সট কপি করে পেস্ট করুন।" }, 400);
+      if (!hasPhones(content))
+        return json({ error: "এই পেজে কোনো ফোন নম্বর পাওয়া যায়নি। ডোনার তালিকা যে পেজে আছে সেই লিংক দিন, অথবা লেখা কপি করে পেস্ট করুন।" }, 400);
     }
     if (!content) return json({ error: "লিংক বা টেক্সট দিন।" }, 400);
     if (content.length < 20)
@@ -106,7 +118,10 @@ serve(async (req) => {
       const m = cleaned.match(/\{[\s\S]*\}/);
       if (m) try { parsed = JSON.parse(m[0]); } catch { /* */ }
     }
-    return json({ donors: Array.isArray(parsed.donors) ? parsed.donors : [] });
+    const donors = Array.isArray(parsed.donors) ? parsed.donors : [];
+    if (donors.length === 0)
+      return json({ error: "এই পেজে কোনো ডোনার পাওয়া যায়নি। ডোনার তালিকার পেজের লিংক দিন বা লেখা কপি করে পেস্ট করুন।" }, 400);
+    return json({ donors });
   } catch (e) {
     if (req.signal.aborted) return new Response(null, { status: 499 });
     console.error("scrape-donors-web error", e);
