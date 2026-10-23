@@ -1,0 +1,4 @@
+ALTER TABLE public.blood_requests ALTER COLUMN hemoglobin DROP NOT NULL;
+ALTER TABLE public.blood_requests ALTER COLUMN hemoglobin DROP DEFAULT;
+DROP POLICY IF EXISTS "Public can submit blood requests with validation" ON public.blood_requests;
+CREATE POLICY "Public can submit blood requests with validation" ON public.blood_requests FOR INSERT WITH CHECK ((status = 'pending') AND (char_length(TRIM(BOTH FROM patient_name)) >= 2) AND (blood_group = ANY (ARRAY['A+','A-','B+','B-','AB+','AB-','O+','O-'])) AND (contact_phone ~ '^01[3-9][0-9]{8}$') AND (char_length(TRIM(BOTH FROM hospital)) >= 2) AND (units_needed >= 1) AND (units_needed <= 20) AND (hemoglobin IS NULL OR (hemoglobin >= 5 AND hemoglobin <= 20)));
