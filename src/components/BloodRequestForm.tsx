@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { bloodGroups } from "@/data/donors";
 import { toast } from "sonner";
 import { z } from "zod";
+import { normalizeBdPhone, BD_PHONE_REGEX } from "@/lib/phone";
 
 const requestSchema = z.object({
   patient_name: z.string().trim().min(1, "রোগীর নাম দিন").max(100),
@@ -11,16 +12,20 @@ const requestSchema = z.object({
     errorMap: () => ({ message: "রক্তের গ্রুপ নির্বাচন করুন" }),
   }),
   units_needed: z.number().int().min(1).max(20),
-  hemoglobin: z
-    .number({ invalid_type_error: "হিমোগ্লোবিন লিখুন" })
-    .min(5, "হিমোগ্লোবিন ৫ এর কম হতে পারে না")
-    .max(20, "হিমোগ্লোবিন ২০ এর বেশি হতে পারে না"),
+  hemoglobin: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined || Number.isNaN(v) ? null : v),
+    z
+      .number()
+      .min(5, "হিমোগ্লোবিন ৫ এর কম হতে পারে না")
+      .max(20, "হিমোগ্লোবিন ২০ এর বেশি হতে পারে না")
+      .nullable()
+  ),
   hospital: z.string().trim().min(1, "হাসপাতালের নাম দিন").max(200),
   contact_phone: z
     .string()
-    .trim()
-    .min(1, "ফোন নম্বর দিন")
-    .regex(/^0\d{9,10}$/, "সঠিক ফোন নম্বর দিন (যেমন: 01XXXXXXXXX)"),
+    .transform((v) => normalizeBdPhone(v))
+    .refine((v) => v.length > 0, "ফোন নম্বর দিন")
+    .refine((v) => BD_PHONE_REGEX.test(v), "সঠিক বাংলাদেশি নম্বর দিন (যেমন: 01XXXXXXXXX)"),
   notes: z.string().trim().max(500).optional(),
 });
 
@@ -191,7 +196,7 @@ const BloodRequestForm = ({ onSubmitted }: { onSubmitted?: (bloodGroup: string) 
           {/* Hemoglobin */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              হিমোগ্লোবিন (g/dL) <span className="text-destructive">*</span>
+              হিমোগ্লোবিন (g/dL) <span className="text-muted-foreground text-xs">(ঐচ্ছিক)</span>
             </label>
             <input
               type="number"
