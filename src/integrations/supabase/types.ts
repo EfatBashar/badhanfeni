@@ -49,7 +49,7 @@ export type Database = {
           blood_group: string
           contact_phone: string
           created_at: string
-          hemoglobin: number
+          hemoglobin: number | null
           hospital: string
           id: string
           notes: string | null
@@ -61,7 +61,7 @@ export type Database = {
           blood_group: string
           contact_phone: string
           created_at?: string
-          hemoglobin?: number
+          hemoglobin?: number | null
           hospital: string
           id?: string
           notes?: string | null
@@ -73,7 +73,7 @@ export type Database = {
           blood_group?: string
           contact_phone?: string
           created_at?: string
-          hemoglobin?: number
+          hemoglobin?: number | null
           hospital?: string
           id?: string
           notes?: string | null

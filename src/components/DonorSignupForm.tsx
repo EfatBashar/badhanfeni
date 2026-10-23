@@ -1,3 +1,4 @@
+import { normalizeBdPhone } from "@/lib/phone";
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { bloodGroups } from "@/data/donors";
@@ -47,7 +48,7 @@ const DonorSignupForm = () => {
   const phoneRegex = /^01[3-9][0-9]{8}$/;
 
   const handleSubmit = async () => {
-    if (!form.name.trim() || !form.phone.trim() || !form.blood_group) {
+    if (!form.name.trim() || !normalizeBdPhone(form.phone) || !form.blood_group) {
       toast({ title: "ত্রুটি", description: "সব তথ্য পূরণ করুন", variant: "destructive" });
       return;
     }
@@ -57,7 +58,7 @@ const DonorSignupForm = () => {
       return;
     }
 
-    if (!phoneRegex.test(form.phone.trim())) {
+    if (!phoneRegex.test(normalizeBdPhone(form.phone))) {
       toast({ title: "ত্রুটি", description: "সঠিক ফোন নম্বর দিন (01XXXXXXXXX)", variant: "destructive" });
       return;
     }
@@ -67,14 +68,14 @@ const DonorSignupForm = () => {
     const { data: existing } = await supabase
       .from("donors")
       .select("id, name")
-      .eq("phone", form.phone.trim())
+      .eq("phone", normalizeBdPhone(form.phone))
       .limit(1);
 
     if (existing && existing.length > 0) {
       setLoading(false);
       toast({
         title: "ডুপ্লিকেট ডোনার!",
-        description: `এই ফোন নম্বর (${form.phone.trim()}) দিয়ে "${existing[0].name}" ইতোমধ্যেই ডোনার তালিকায় আছেন।`,
+        description: `এই ফোন নম্বর (${normalizeBdPhone(form.phone)}) দিয়ে "${existing[0].name}" ইতোমধ্যেই ডোনার তালিকায় আছেন।`,
         variant: "destructive",
       });
       return;
@@ -82,7 +83,7 @@ const DonorSignupForm = () => {
 
     const { error } = await supabase.from("donors").insert({
       name: form.name.trim(),
-      phone: form.phone.trim(),
+      phone: normalizeBdPhone(form.phone),
       blood_group: form.blood_group,
       gender: form.gender,
     });
@@ -186,7 +187,7 @@ const DonorSignupForm = () => {
       if (updated[i].status !== "pending") continue;
 
       const name = updated[i].name.trim();
-      const phone = updated[i].phone.trim();
+      const phone = normalizeBdPhone(updated[i].phone);
 
       if (name.length < 2 || !phoneRegex.test(phone) || !bloodGroups.includes(updated[i].blood_group)) {
         updated[i].status = "error";

@@ -14,17 +14,18 @@ interface QueuedDonor extends DonorRegistration {
 export type DonorSubmitResult = "success" | "duplicate";
 
 const QUEUE_KEY = "badhon-pending-donor-registrations";
+import { normalizeBdPhone } from "./phone";
 const phoneRegex = /^01[3-9][0-9]{8}$/;
 
 export const validateDonor = (donor: DonorRegistration): string | null => {
-  if (!donor.name.trim() || !donor.phone.trim() || !donor.blood_group) return "সব তথ্য পূরণ করুন";
+  if (!donor.name.trim() || !normalizeBdPhone(donor.phone) || !donor.blood_group) return "সব তথ্য পূরণ করুন";
   if (donor.name.trim().length < 2) return "নাম কমপক্ষে ২ অক্ষরের হতে হবে";
-  if (!phoneRegex.test(donor.phone.trim())) return "সঠিক ফোন নম্বর দিন (01XXXXXXXXX)";
+  if (!phoneRegex.test(normalizeBdPhone(donor.phone))) return "সঠিক ফোন নম্বর দিন (01XXXXXXXXX)";
   return null;
 };
 
 export const submitDonor = async (donor: DonorRegistration): Promise<DonorSubmitResult> => {
-  const phone = donor.phone.trim();
+  const phone = normalizeBdPhone(donor.phone);
   const { data: existing, error: lookupError } = await supabase
     .from("donors")
     .select("id")
@@ -54,8 +55,8 @@ export const getQueuedDonors = (): QueuedDonor[] => {
 };
 
 export const queueDonor = (donor: DonorRegistration) => {
-  const queue = getQueuedDonors().filter((item) => item.phone !== donor.phone.trim());
-  queue.push({ ...donor, name: donor.name.trim(), phone: donor.phone.trim(), queuedAt: new Date().toISOString() });
+  const queue = getQueuedDonors().filter((item) => item.phone !== normalizeBdPhone(donor.phone));
+  queue.push({ ...donor, name: donor.name.trim(), phone: normalizeBdPhone(donor.phone), queuedAt: new Date().toISOString() });
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
   window.dispatchEvent(new Event("donor-queue-change"));
 };
