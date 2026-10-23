@@ -88,6 +88,8 @@ const Login = () => {
         email,
         password,
         options: {
+          // Return the user to the same site (Vercel / Lovable / PWA) they signed up from.
+          emailRedirectTo: `${window.location.origin}`,
           data: {
             name: name.trim(),
             phone: phone.trim(),
