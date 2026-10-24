@@ -33,12 +33,20 @@ export const useDonors = () =>
   useQuery({
     queryKey: ["donors"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("donors")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data as Donor[];
+      const PAGE = 1000;
+      const all: Donor[] = [];
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await supabase
+          .from("donors")
+          .select("*")
+          .order("name")
+          .order("id")
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        all.push(...((data ?? []) as Donor[]));
+        if (!data || data.length < PAGE) break;
+      }
+      return all;
     },
   });
 
