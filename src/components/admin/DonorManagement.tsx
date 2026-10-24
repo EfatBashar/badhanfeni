@@ -20,6 +20,8 @@ const DonorManagement = () => {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", blood_group: "A+", gender: "male" });
   const [bulkLoading, setBulkLoading] = useState<string | null>(null);
+  const [activeGroup, setActiveGroup] = useState<string>("A+");
+  const [search, setSearch] = useState("");
 
   const bulkToggleVisibility = async (gender: "male" | "female", makeVisible: boolean) => {
     const key = `${gender}-${makeVisible ? "show" : "hide"}`;
@@ -92,6 +94,21 @@ const DonorManagement = () => {
 
   const visibleCount = donors?.filter((d) => d.is_visible).length ?? 0;
   const hiddenCount = (donors?.length ?? 0) - visibleCount;
+
+  const groupCounts: Record<string, number> = {};
+  (donors ?? []).forEach((d) => {
+    groupCounts[d.blood_group] = (groupCounts[d.blood_group] ?? 0) + 1;
+  });
+  const q = search.trim().toLowerCase();
+  const filteredDonors = [...(donors ?? [])]
+    .filter((d) => activeGroup === "all" || d.blood_group === activeGroup)
+    .filter((d) => !q || d.name.toLowerCase().includes(q) || d.phone.includes(q))
+    .sort((a, b) => {
+      const ai = bloodGroups.indexOf(a.blood_group);
+      const bi = bloodGroups.indexOf(b.blood_group);
+      if (ai !== bi) return ai - bi;
+      return a.name.localeCompare(b.name, "bn");
+    });
 
   return (
     <div className="space-y-4">
@@ -198,10 +215,42 @@ const DonorManagement = () => {
         </Button>
       </div>
 
+      <div className="flex gap-2 overflow-x-auto pb-1 border-b border-border">
+        {["all", ...bloodGroups].map((g) => {
+          const count = g === "all" ? donors?.length ?? 0 : groupCounts[g] ?? 0;
+          const active = activeGroup === g;
+          return (
+            <button
+              key={g}
+              onClick={() => setActiveGroup(g)}
+              className={`shrink-0 flex flex-col items-center rounded-full border-2 px-3 py-1.5 text-sm font-bold transition-colors ${
+                active
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-foreground hover:border-primary"
+              }`}
+            >
+              <span>{g === "all" ? "সব" : g}</span>
+              <span className="text-[10px] font-normal opacity-80">{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <Input
+        placeholder="নাম বা নম্বর দিয়ে খুঁজুন..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      <p className="text-sm text-muted-foreground">
+        {activeGroup === "all" ? "সব গ্রুপ" : activeGroup} — {filteredDonors.length} জন
+      </p>
+
       <div className="rounded-lg border border-border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">#</TableHead>
               <TableHead>নাম</TableHead>
               <TableHead>গ্রুপ</TableHead>
               <TableHead>লিঙ্গ</TableHead>
@@ -212,13 +261,9 @@ const DonorManagement = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {[...(donors ?? [])].sort((a, b) => {
-              const ai = bloodGroups.indexOf(a.blood_group);
-              const bi = bloodGroups.indexOf(b.blood_group);
-              if (ai !== bi) return ai - bi;
-              return a.name.localeCompare(b.name, "bn");
-            }).map((d) => (
+            {filteredDonors.map((d, i) => (
               <TableRow key={d.id} className={!d.is_visible ? "opacity-60" : ""}>
+                <TableCell className="text-muted-foreground">{i + 1}.</TableCell>
                 <TableCell className="font-medium">{d.name}</TableCell>
                 <TableCell>{d.blood_group}</TableCell>
                 <TableCell className="text-xs">
