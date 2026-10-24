@@ -7,6 +7,7 @@ import { LogOut, Users, UserCog, Droplets, UserPlus2, Megaphone } from "lucide-r
 import DonorManagement from "@/components/admin/DonorManagement";
 import CommitteeManagement from "@/components/admin/CommitteeManagement";
 import BloodRequestList from "@/components/admin/BloodRequestList";
+import PushNotificationToggle from "@/components/admin/PushNotificationToggle";
 import NewSignupsList from "@/components/admin/NewSignupsList";
 import AnnouncementManager from "@/components/admin/AnnouncementManager";
 import type { Session } from "@supabase/supabase-js";
@@ -63,6 +64,7 @@ const Admin = () => {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
+        <PushNotificationToggle />
         <Tabs defaultValue="donors" className="space-y-4">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="donors" className="gap-1 text-xs sm:text-sm">
