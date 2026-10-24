@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.png", "apple-touch-icon.png", "pwa-icon-192.png", "pwa-icon-512.png"],
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
+        importScripts: ["/push-sw.js"],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
