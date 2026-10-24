@@ -78,9 +78,11 @@ const BloodRequestForm = ({ onSubmitted }: { onSubmitted?: (bloodGroup: string) 
     }
 
     setSubmitting(true);
+    const requestId = crypto.randomUUID();
     const { error } = await supabase
       .from("blood_requests")
       .insert({
+        id: requestId,
         patient_name: result.data.patient_name,
         blood_group: result.data.blood_group,
         units_needed: result.data.units_needed,
@@ -98,6 +100,7 @@ const BloodRequestForm = ({ onSubmitted }: { onSubmitted?: (bloodGroup: string) 
       return;
     }
 
+    supabase.functions.invoke("notify-admin-push", { body: { request_id: requestId } }).catch(() => {});
     setSubmitted(true);
     onSubmitted?.(result.data.blood_group);
     toast.success("রক্তের রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে!");
