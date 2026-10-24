@@ -15,6 +15,13 @@
       "when": 1792757185074,
       "tag": "0001_admin_push_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792844182213,
+      "tag": "0002_hemoglobin_min_1",
+      "breakpoints": true
     }
   ]
 }

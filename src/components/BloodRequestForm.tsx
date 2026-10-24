@@ -16,7 +16,7 @@ const requestSchema = z.object({
     (v) => (v === "" || v === null || v === undefined || Number.isNaN(v) ? null : v),
     z
       .number()
-      .min(5, "হিমোগ্লোবিন ৫ এর কম হতে পারে না")
+      .min(1, "হিমোগ্লোবিন ১ এর কম হতে পারে না")
       .max(20, "হিমোগ্লোবিন ২০ এর বেশি হতে পারে না")
       .nullable()
   ),
@@ -206,7 +206,7 @@ const BloodRequestForm = ({ onSubmitted }: { onSubmitted?: (bloodGroup: string) 
               name="hemoglobin"
               value={form.hemoglobin}
               onChange={handleChange}
-              min={5}
+              min={1}
               max={20}
               step={0.1}
               placeholder="যেমন: 12.5"
@@ -214,7 +214,7 @@ const BloodRequestForm = ({ onSubmitted }: { onSubmitted?: (bloodGroup: string) 
             />
             {errors.hemoglobin && <p className="mt-1 text-xs text-destructive">{errors.hemoglobin}</p>}
             <p className="mt-1 text-[11px] text-muted-foreground">
-              রোগীর সাম্প্রতিক হিমোগ্লোবিন রিপোর্ট থেকে (৫–২০ g/dL এর মধ্যে)
+              রোগীর সাম্প্রতিক হিমোগ্লোবিন রিপোর্ট থেকে (১–২০ g/dL এর মধ্যে)
             </p>
           </div>
 
