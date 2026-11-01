@@ -88,7 +88,11 @@ const HelpChatBot = () => {
   const [messages, setMessages] = useState<ChatMsg[]>(loadMessages);
   const [status, setStatus] = useState<"idle" | "submitted" | "streaming">("idle");
   const abortRef = useRef<AbortController | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const composerRef = useRef<HTMLDivElement | null>(null);
+
+  const focusComposer = useCallback(() => {
+    composerRef.current?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+  }, []);
 
   // Persist the single conversation (only when a stream is not running)
   useEffect(() => {
