@@ -37,6 +37,7 @@ const App = () => (
               <Route path="/quiz" element={<BadhonQuiz />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <HelpChatBot />
           </AuthGate>
         </Suspense>
       </BrowserRouter>
