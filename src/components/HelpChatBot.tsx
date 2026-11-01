@@ -298,7 +298,6 @@ const HelpChatBot = () => {
           className="rounded-xl border border-input bg-background"
         >
           <PromptInputTextarea
-            ref={textareaRef}
             placeholder="আপনার প্রশ্ন লিখুন..."
             rows={1}
             className="max-h-28"
