@@ -104,7 +104,7 @@ const HelpChatBot = () => {
 
   // Keep the composer focused while chatting
   useEffect(() => {
-    if (open && status === "idle") textareaRef.current?.focus();
+    if (open && status === "idle") focusComposer();
   }, [open, status]);
 
   const send = useCallback(
@@ -177,7 +177,7 @@ const HelpChatBot = () => {
       } finally {
         abortRef.current = null;
         setStatus("idle");
-        setTimeout(() => textareaRef.current?.focus(), 0);
+        setTimeout(focusComposer, 0);
       }
     },
     [messages, status]
@@ -189,7 +189,7 @@ const HelpChatBot = () => {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
     } catch { /* ignore */ }
-    setTimeout(() => textareaRef.current?.focus(), 0);
+    setTimeout(focusComposer, 0);
   };
 
   if (!open) {
@@ -292,7 +292,7 @@ const HelpChatBot = () => {
       </Conversation>
 
       {/* Composer */}
-      <div className="border-t border-border bg-card p-2">
+      <div ref={composerRef} className="border-t border-border bg-card p-2">
         <PromptInput
           onSubmit={({ text }) => send(text ?? "")}
           className="rounded-xl border border-input bg-background"
