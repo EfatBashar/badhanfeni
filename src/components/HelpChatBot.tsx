@@ -304,7 +304,7 @@ const HelpChatBot = () => {
           />
           <PromptInputFooter className="justify-end px-1 pb-1">
             <PromptInputSubmit
-              status={status}
+              status={status === "idle" ? "ready" : status}
               onStop={() => abortRef.current?.abort()}
               disabled={status === "idle" && !messages.length}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
