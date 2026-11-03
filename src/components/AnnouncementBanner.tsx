@@ -52,6 +52,16 @@ const AnnouncementBanner = () => {
 
   const [idx, setIdx] = useState(0);
   const pauseUntilRef = useRef(0);
+  const [paused, setPaused] = useState(false);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const pauseTicker = () => {
+    setPaused(true);
+    clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => setPaused(false), 5000);
+  };
+
+  useEffect(() => () => clearTimeout(resumeTimer.current), []);
 
   useEffect(() => {
     setIdx(0);
@@ -131,21 +141,22 @@ const AnnouncementBanner = () => {
           )}
         </div>
       ) : (
-        <div className="group relative flex overflow-hidden py-3">
-          <div className="flex shrink-0 animate-marquee whitespace-nowrap text-lg font-bold text-primary [animation-play-state:running] group-hover:[animation-play-state:paused] group-active:[animation-play-state:paused] md:text-xl">
-            <span className="px-8">{message}</span>
-            <span className="px-8" aria-hidden="true">★</span>
-            <span className="px-8" aria-hidden="true">{message}</span>
-            <span className="px-8" aria-hidden="true">★</span>
-          </div>
+        <div
+          className="relative overflow-hidden py-3 select-none"
+          onPointerDown={pauseTicker}
+        >
           <div
-            className="flex shrink-0 animate-marquee whitespace-nowrap text-lg font-bold text-primary [animation-play-state:running] group-hover:[animation-play-state:paused] group-active:[animation-play-state:paused] md:text-xl"
-            aria-hidden="true"
+            className="flex w-max animate-marquee whitespace-nowrap text-lg font-bold text-primary will-change-transform md:text-xl"
+            style={{ animationPlayState: paused ? "paused" : "running" }}
           >
-            <span className="px-8">{message}</span>
-            <span className="px-8">★</span>
-            <span className="px-8">{message}</span>
-            <span className="px-8">★</span>
+            {[0, 1].map((k) => (
+              <div key={k} className="flex shrink-0" aria-hidden={k === 1 ? "true" : undefined}>
+                <span className="px-8">{message}</span>
+                <span className="px-8">★</span>
+                <span className="px-8">{message}</span>
+                <span className="px-8">★</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
