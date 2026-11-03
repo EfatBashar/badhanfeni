@@ -42,15 +42,15 @@ const HeadlineTicker = () => {
   const text = announcement.message;
 
   return (
-    <div className="relative flex overflow-hidden">
-      <div className="flex animate-marquee whitespace-nowrap py-1.5 text-base font-semibold text-primary-foreground [animation-play-state:running] hover:[animation-play-state:paused] md:text-lg">
+    <div className="group relative flex overflow-hidden">
+      <div className="flex animate-marquee whitespace-nowrap py-1.5 text-base font-semibold text-primary-foreground [animation-play-state:running] group-hover:[animation-play-state:paused] group-active:[animation-play-state:paused] md:text-lg">
         <span className="px-8">{text}</span>
         <span className="px-8" aria-hidden="true">★</span>
         <span className="px-8" aria-hidden="true">{text}</span>
         <span className="px-8" aria-hidden="true">★</span>
       </div>
       <div
-        className="flex animate-marquee whitespace-nowrap py-1.5 text-base font-semibold text-primary-foreground [animation-play-state:running] hover:[animation-play-state:paused] md:text-lg"
+        className="flex animate-marquee whitespace-nowrap py-1.5 text-base font-semibold text-primary-foreground [animation-play-state:running] group-hover:[animation-play-state:paused] group-active:[animation-play-state:paused] md:text-lg"
         aria-hidden="true"
       >
         <span className="px-8">{text}</span>

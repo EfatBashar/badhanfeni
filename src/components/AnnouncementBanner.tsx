@@ -131,15 +131,15 @@ const AnnouncementBanner = () => {
           )}
         </div>
       ) : (
-        <div className="relative flex overflow-hidden py-3">
-          <div className="flex shrink-0 animate-marquee whitespace-nowrap text-lg font-bold text-primary [animation-play-state:running] hover:[animation-play-state:paused] md:text-xl">
+        <div className="group relative flex overflow-hidden py-3">
+          <div className="flex shrink-0 animate-marquee whitespace-nowrap text-lg font-bold text-primary [animation-play-state:running] group-hover:[animation-play-state:paused] group-active:[animation-play-state:paused] md:text-xl">
             <span className="px-8">{message}</span>
             <span className="px-8" aria-hidden="true">★</span>
             <span className="px-8" aria-hidden="true">{message}</span>
             <span className="px-8" aria-hidden="true">★</span>
           </div>
           <div
-            className="flex shrink-0 animate-marquee whitespace-nowrap text-lg font-bold text-primary [animation-play-state:running] hover:[animation-play-state:paused] md:text-xl"
+            className="flex shrink-0 animate-marquee whitespace-nowrap text-lg font-bold text-primary [animation-play-state:running] group-hover:[animation-play-state:paused] group-active:[animation-play-state:paused] md:text-xl"
             aria-hidden="true"
           >
             <span className="px-8">{message}</span>
