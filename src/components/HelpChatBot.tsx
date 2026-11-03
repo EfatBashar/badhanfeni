@@ -198,7 +198,11 @@ const HelpChatBot = () => {
         type="button"
         aria-label="AI সহায়তা খুলুন"
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full border border-primary/40 bg-card shadow-lg shadow-primary/25 transition-transform hover:scale-105 active:scale-95"
+        style={{
+          bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
+          right: "calc(1rem + env(safe-area-inset-right, 0px))",
+        }}
+        className="pointer-events-auto fixed z-[80] flex h-14 w-14 items-center justify-center rounded-full border-2 border-primary/50 bg-card shadow-xl shadow-primary/30 transition-transform hover:scale-105 active:scale-95"
       >
         <img src={logoUrl} alt="বাঁধন AI" className="h-9 w-9" />
         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
@@ -209,7 +213,13 @@ const HelpChatBot = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] flex h-[min(72vh,620px)] w-[min(94vw,390px)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+    <div
+      style={{
+        bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
+        right: "calc(0.75rem + env(safe-area-inset-right, 0px))",
+      }}
+      className="pointer-events-auto fixed z-[80] flex h-[min(75dvh,620px)] w-[min(calc(100vw-1.5rem),390px)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
+    >
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border bg-primary px-3 py-2.5 text-primary-foreground">
         <img src={logoUrl} alt="" className="h-8 w-8 rounded-full bg-white/90 p-0.5" />
