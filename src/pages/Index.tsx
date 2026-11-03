@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import HeroSection from "@/components/HeroSection";
@@ -14,7 +14,16 @@ import Seo from "@/components/Seo";
 
 const Index = () => {
   const [requestedBloodGroup, setRequestedBloodGroup] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const check = (email?: string | null) =>
+      setIsAdmin((email ?? "").toLowerCase() === "badhanfgcunit2018@gmail.com");
+    supabase.auth.getSession().then(({ data }) => check(data.session?.user.email));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => check(s?.user.email));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -70,10 +79,14 @@ const Index = () => {
             <p>📍 অফিস: কক্ষ নং-১, নিচ তলা, পূর্ব লাল ভবন, ফেনী সরকারি কলেজ।</p>
           </div>
           <div className="flex items-center justify-center gap-3 pt-3 border-t border-border mt-3">
-            <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              🔒 অ্যাডমিন
-            </Link>
-            <span className="text-muted-foreground/40">|</span>
+            {isAdmin && (
+              <>
+                <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  🔒 অ্যাডমিন
+                </Link>
+                <span className="text-muted-foreground/40">|</span>
+              </>
+            )}
             <button
               onClick={handleLogout}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
