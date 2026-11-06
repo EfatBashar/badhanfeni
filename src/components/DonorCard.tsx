@@ -1,5 +1,7 @@
 import { Phone, CheckCircle, AlertCircle, Calendar, User, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import type { Donor } from "@/data/donors";
 
 const FOUR_MONTHS_MS = 4 * 30 * 24 * 60 * 60 * 1000;
@@ -19,6 +21,13 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
   const eligible = isEligible(donor.last_donation);
   const [showContact, setShowContact] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setLoggedIn(!!s));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleCopy = async () => {
     const textToCopy = `${donor.name}: ${donor.phone}`;
@@ -98,6 +107,17 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
           >
             <Phone className="h-4 w-4" /> যোগাযোগ
           </button>
+        ) : !loggedIn ? (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+            <p className="text-sm font-semibold text-foreground">🔒 নম্বর দেখতে লগইন / সাইন-আপ করুন</p>
+            <p className="mt-1 text-xs text-muted-foreground">সাইন-আপের পর আপনার ইমেইলে আসা লিংকে ক্লিক করে account confirm করুন।</p>
+            <Link
+              to="/login"
+              className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow"
+            >
+              লগইন / সাইন-আপ
+            </Link>
+          </div>
         ) : (
           <>
             {/* Phone number with copy */}

@@ -15,11 +15,14 @@ import Seo from "@/components/Seo";
 const Index = () => {
   const [requestedBloodGroup, setRequestedBloodGroup] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const check = (email?: string | null) =>
+    const check = (email?: string | null) => {
+      setLoggedIn(!!email);
       setIsAdmin((email ?? "").toLowerCase() === "badhanfgcunit2018@gmail.com");
+    };
     supabase.auth.getSession().then(({ data }) => check(data.session?.user.email));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => check(s?.user.email));
     return () => subscription.unsubscribe();
@@ -87,12 +90,18 @@ const Index = () => {
                 <span className="text-muted-foreground/40">|</span>
               </>
             )}
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
-            >
-              <LogOut className="h-3 w-3" /> লগআউট
-            </button>
+            {loggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <LogOut className="h-3 w-3" /> লগআউট
+              </button>
+            ) : (
+              <Link to="/login" className="text-xs font-semibold text-primary hover:underline">
+                🔑 লগইন / সাইন-আপ
+              </Link>
+            )}
           </div>
           <p className="pt-3 text-xs text-muted-foreground">
             DEVELOPED BY{" "}
