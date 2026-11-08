@@ -30,6 +30,7 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
   }, []);
 
   const handleCopy = async () => {
+    if (!donor.phone) return;
     const textToCopy = `${donor.name}: ${donor.phone}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -107,7 +108,7 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
           >
             <Phone className="h-4 w-4" /> যোগাযোগ
           </button>
-        ) : !loggedIn ? (
+        ) : loggedIn !== true || !donor.phone ? (
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
             <p className="text-sm font-semibold text-foreground">🔒 নম্বর দেখতে লগইন / সাইন-আপ করুন</p>
             <p className="mt-1 text-xs text-muted-foreground">সাইন-আপের পর আপনার ইমেইলে আসা লিংকে ক্লিক করে account confirm করুন।</p>

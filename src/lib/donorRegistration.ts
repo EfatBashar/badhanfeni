@@ -26,23 +26,14 @@ export const validateDonor = (donor: DonorRegistration): string | null => {
 
 export const submitDonor = async (donor: DonorRegistration): Promise<DonorSubmitResult> => {
   const phone = normalizeBdPhone(donor.phone);
-  const { data: existing, error: lookupError } = await supabase
-    .from("donors")
-    .select("id")
-    .eq("phone", phone)
-    .limit(1);
-
-  if (lookupError) throw lookupError;
-  if (existing && existing.length > 0) return "duplicate";
-
-  const { error } = await supabase.from("donors").insert({
-    name: donor.name.trim(),
-    phone,
-    blood_group: donor.blood_group,
-    gender: donor.gender,
+  const { data, error } = await supabase.rpc("register_public_donor", {
+    _name: donor.name.trim(),
+    _phone: phone,
+    _blood_group: donor.blood_group,
+    _gender: donor.gender,
   });
   if (error) throw error;
-  return "success";
+  return data ? "success" : "duplicate";
 };
 
 export const getQueuedDonors = (): QueuedDonor[] => {

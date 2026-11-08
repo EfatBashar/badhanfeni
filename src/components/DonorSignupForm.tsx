@@ -65,32 +65,18 @@ const DonorSignupForm = () => {
 
     setLoading(true);
 
-    const { data: existing } = await supabase
-      .from("donors")
-      .select("id, name")
-      .eq("phone", normalizeBdPhone(form.phone))
-      .limit(1);
-
-    if (existing && existing.length > 0) {
-      setLoading(false);
-      toast({
-        title: "ডুপ্লিকেট ডোনার!",
-        description: `এই ফোন নম্বর (${normalizeBdPhone(form.phone)}) দিয়ে "${existing[0].name}" ইতোমধ্যেই ডোনার তালিকায় আছেন।`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { error } = await supabase.from("donors").insert({
-      name: form.name.trim(),
-      phone: normalizeBdPhone(form.phone),
-      blood_group: form.blood_group,
-      gender: form.gender,
+    const { data: added, error } = await supabase.rpc("register_public_donor", {
+      _name: form.name.trim(),
+      _phone: normalizeBdPhone(form.phone),
+      _blood_group: form.blood_group,
+      _gender: form.gender,
     });
     setLoading(false);
 
     if (error) {
       toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
+    } else if (!added) {
+      toast({ title: "ডুপ্লিকেট ডোনার!", description: "এই ফোন নম্বরটি আগেই ডোনার তালিকায় আছে।", variant: "destructive" });
     } else {
       toast({ title: "সফল!", description: "আপনি ডোনার তালিকায় যোগ হয়েছেন। ধন্যবাদ! 🎉" });
       setForm({ name: "", phone: "", blood_group: "", gender: "male" });
@@ -141,17 +127,13 @@ const DonorSignupForm = () => {
         return;
       }
 
-      const phones = donors.map((d) => d.phone);
-      const { data: existing } = await supabase.from("donors").select("phone").in("phone", phones);
-      const existingSet = new Set((existing ?? []).map((d) => d.phone));
-
       setParsedDonors(
         donors.map((d) => ({
           name: d.name,
           phone: d.phone,
           blood_group: d.blood_group,
           gender: looksFemale(d.name) ? "female" : "male",
-          status: existingSet.has(d.phone) ? "duplicate" : "pending",
+          status: "pending",
         }))
       );
       setShowPdfDialog(true);
@@ -194,15 +176,17 @@ const DonorSignupForm = () => {
         continue;
       }
 
-      const { error } = await supabase.from("donors").insert({
-        name,
-        phone,
-        blood_group: updated[i].blood_group,
-        gender: updated[i].gender,
+      const { data: added, error } = await supabase.rpc("register_public_donor", {
+        _name: name,
+        _phone: phone,
+        _blood_group: updated[i].blood_group,
+        _gender: updated[i].gender,
       });
 
       if (error) {
         updated[i].status = "error";
+      } else if (!added) {
+        updated[i].status = "duplicate";
       } else {
         updated[i].status = "added";
         addedCount++;

@@ -72,18 +72,6 @@ const Login = () => {
         return;
       }
 
-      const { data: existing } = await supabase
-        .from("donors")
-        .select("id")
-        .eq("phone", phone.trim())
-        .limit(1);
-
-      if (existing && existing.length > 0) {
-        setLoading(false);
-        toast({ title: "ডুপ্লিকেট!", description: "এই ফোন নম্বর দিয়ে আগেই ডোনার তালিকায় আছেন।", variant: "destructive" });
-        return;
-      }
-
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -102,15 +90,21 @@ const Login = () => {
         setLoading(false);
         toast({ title: "সাইনআপ ব্যর্থ", description: error.message, variant: "destructive" });
       } else {
-        await supabase.from("donors").insert({
-          name: name.trim(),
-          phone: phone.trim(),
-          blood_group: bloodGroup,
+        const { data: donorAdded, error: donorError } = await supabase.rpc("register_public_donor", {
+          _name: name.trim(),
+          _phone: phone.trim(),
+          _blood_group: bloodGroup,
+          _gender: "male",
         });
-
-
         setLoading(false);
-        toast({ title: "ধন্যবাদ! 🎉", description: "আপনার সাইনআপ সফল হয়েছে। আমাদের পাশে থাকার জন্য অসংখ্য ধন্যবাদ! ইমেইল ভেরিফাই করে লগইন করুন। ❤️" });
+        toast({
+          title: donorError ? "সাইনআপ সম্পন্ন" : donorAdded ? "ধন্যবাদ! 🎉" : "সাইনআপ সম্পন্ন",
+          description: donorError
+            ? "অ্যাকাউন্ট তৈরি হয়েছে, তবে ডোনার তথ্য জমা হয়নি। পরে আবার চেষ্টা করুন।"
+            : donorAdded
+              ? "আপনার সাইনআপ সফল হয়েছে। ইমেইল ভেরিফাই করে লগইন করুন। ❤️"
+              : "অ্যাকাউন্ট তৈরি হয়েছে। এই ফোন নম্বরটি আগে থেকেই ডোনার তালিকায় আছে।",
+        });
         setIsSignup(false);
       }
     } else {

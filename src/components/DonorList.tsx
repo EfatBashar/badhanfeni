@@ -10,7 +10,7 @@ const DonorList = ({ lockedBloodGroup }: { lockedBloodGroup?: string }) => {
   const filtered = useMemo(() => {
     return donors.filter((d) => {
       const matchesGroup = !lockedBloodGroup || d.blood_group === lockedBloodGroup;
-      const matchesSearch = !search || d.name.toLowerCase().includes(search.toLowerCase()) || d.phone.includes(search);
+      const matchesSearch = !search || d.name.toLowerCase().includes(search.toLowerCase()) || (d.phone?.includes(search) ?? false);
       return matchesGroup && matchesSearch;
     });
   }, [search, donors, lockedBloodGroup]);
@@ -29,7 +29,7 @@ const DonorList = ({ lockedBloodGroup }: { lockedBloodGroup?: string }) => {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="নাম বা ফোন নম্বর দিয়ে খুঁজুন..."
+            placeholder="নাম দিয়ে খুঁজুন..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
