@@ -22,6 +22,27 @@
       "when": 1792844182213,
       "tag": "0002_hemoglobin_min_1",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794140197724,
+      "tag": "0003_protect_donor_phone_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794140239704,
+      "tag": "0004_return_public_donor_registration_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794140442790,
+      "tag": "0005_hide_donor_duplicate_lookup_from_guests",
+      "breakpoints": true
     }
   ]
 }

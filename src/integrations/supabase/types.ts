@@ -229,10 +229,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      donors_public: {
+        Row: {
+          blood_group: string | null
+          created_at: string | null
+          gender: string | null
+          id: string | null
+          is_visible: boolean | null
+          last_donation: string | null
+          name: string | null
+          total_donations: number | null
+        }
+        Insert: {
+          blood_group?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string | null
+          is_visible?: boolean | null
+          last_donation?: string | null
+          name?: string | null
+          total_donations?: number | null
+        }
+        Update: {
+          blood_group?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string | null
+          is_visible?: boolean | null
+          last_donation?: string | null
+          name?: string | null
+          total_donations?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      register_public_donor: {
+        Args: {
+          _blood_group: string
+          _gender: string
+          _name: string
+          _phone: string
+        }
+        Returns: undefined
+      }
       update_donor_last_donation: {
         Args: { _donor_id: string; _last_donation: string }
         Returns: boolean

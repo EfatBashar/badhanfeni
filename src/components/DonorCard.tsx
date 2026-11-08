@@ -30,6 +30,7 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
   }, []);
 
   const handleCopy = async () => {
+    if (!donor.phone) return;
     const textToCopy = `${donor.name}: ${donor.phone}`;
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -107,6 +108,8 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
           >
             <Phone className="h-4 w-4" /> যোগাযোগ
           </button>
+        ) : loggedIn === null ? (
+          <p className="py-2 text-center text-sm text-muted-foreground">নম্বর যাচাই হচ্ছে...</p>
         ) : !loggedIn ? (
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
             <p className="text-sm font-semibold text-foreground">🔒 নম্বর দেখতে লগইন / সাইন-আপ করুন</p>
@@ -118,7 +121,7 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
               লগইন / সাইন-আপ
             </Link>
           </div>
-        ) : (
+        ) : donor.phone ? (
           <>
             {/* Phone number with copy */}
             <button
@@ -138,6 +141,8 @@ const DonorCard = ({ donor }: { donor: Donor }) => {
               <Phone className="h-4 w-4" /> কল করুন
             </a>
           </>
+        ) : (
+          <p className="py-2 text-center text-sm text-muted-foreground">নম্বর লোড হচ্ছে...</p>
         )}
       </div>
     </div>
