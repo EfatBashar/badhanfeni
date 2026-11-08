@@ -102,7 +102,7 @@ const DonorManagement = () => {
   const q = search.trim().toLowerCase();
   const filteredDonors = [...(donors ?? [])]
     .filter((d) => activeGroup === "all" || d.blood_group === activeGroup)
-    .filter((d) => !q || d.name.toLowerCase().includes(q) || d.phone.includes(q))
+    .filter((d) => !q || d.name.toLowerCase().includes(q) || (d.phone?.includes(q) ?? false))
     .sort((a, b) => {
       const ai = bloodGroups.indexOf(a.blood_group);
       const bi = bloodGroups.indexOf(b.blood_group);
