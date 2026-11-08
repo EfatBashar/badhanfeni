@@ -272,7 +272,7 @@ export type Database = {
           _name: string
           _phone: string
         }
-        Returns: boolean
+        Returns: undefined
       }
       update_donor_last_donation: {
         Args: { _donor_id: string; _last_donation: string }
