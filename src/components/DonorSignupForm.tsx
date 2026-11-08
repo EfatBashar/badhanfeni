@@ -65,7 +65,7 @@ const DonorSignupForm = () => {
 
     setLoading(true);
 
-    const { data: added, error } = await supabase.rpc("register_public_donor", {
+    const { error } = await supabase.rpc("register_public_donor", {
       _name: form.name.trim(),
       _phone: normalizeBdPhone(form.phone),
       _blood_group: form.blood_group,
@@ -75,8 +75,6 @@ const DonorSignupForm = () => {
 
     if (error) {
       toast({ title: "ত্রুটি", description: error.message, variant: "destructive" });
-    } else if (!added) {
-      toast({ title: "ডুপ্লিকেট ডোনার!", description: "এই ফোন নম্বরটি আগেই ডোনার তালিকায় আছে।", variant: "destructive" });
     } else {
       toast({ title: "সফল!", description: "আপনি ডোনার তালিকায় যোগ হয়েছেন। ধন্যবাদ! 🎉" });
       setForm({ name: "", phone: "", blood_group: "", gender: "male" });
@@ -176,7 +174,7 @@ const DonorSignupForm = () => {
         continue;
       }
 
-      const { data: added, error } = await supabase.rpc("register_public_donor", {
+      const { error } = await supabase.rpc("register_public_donor", {
         _name: name,
         _phone: phone,
         _blood_group: updated[i].blood_group,
@@ -185,8 +183,6 @@ const DonorSignupForm = () => {
 
       if (error) {
         updated[i].status = "error";
-      } else if (!added) {
-        updated[i].status = "duplicate";
       } else {
         updated[i].status = "added";
         addedCount++;

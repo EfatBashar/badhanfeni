@@ -11,7 +11,7 @@ interface QueuedDonor extends DonorRegistration {
   queuedAt: string;
 }
 
-export type DonorSubmitResult = "success" | "duplicate";
+export type DonorSubmitResult = "success";
 
 const QUEUE_KEY = "badhon-pending-donor-registrations";
 import { normalizeBdPhone } from "./phone";
@@ -33,7 +33,8 @@ export const submitDonor = async (donor: DonorRegistration): Promise<DonorSubmit
     _gender: donor.gender,
   });
   if (error) throw error;
-  return data ? "success" : "duplicate";
+  void data;
+  return "success";
 };
 
 export const getQueuedDonors = (): QueuedDonor[] => {
@@ -62,7 +63,6 @@ export const flushDonorQueue = async () => {
     try {
       const result = await submitDonor(donor);
       if (result === "success") synced += 1;
-      else duplicates += 1;
     } catch {
       remaining.push(donor);
     }

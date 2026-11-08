@@ -66,11 +66,8 @@ const JoinDonor = () => {
     setLoading(true);
     try {
       const result = await submitDonor(form);
-      if (result === "duplicate") setError("এই phone number দিয়ে আগে থেকেই donor list-এ আছেন।");
-      else {
-        setForm(emptyForm);
-        setMessage("আপনি donor list-এ যোগ হয়েছেন। ধন্যবাদ!");
-      }
+      setForm(emptyForm);
+      setMessage("তথ্য জমা হয়েছে। ধন্যবাদ!");
     } catch {
       if (!navigator.onLine) {
         queueDonor(form);

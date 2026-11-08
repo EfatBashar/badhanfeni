@@ -90,7 +90,7 @@ const Login = () => {
         setLoading(false);
         toast({ title: "সাইনআপ ব্যর্থ", description: error.message, variant: "destructive" });
       } else {
-        const { data: donorAdded, error: donorError } = await supabase.rpc("register_public_donor", {
+        const { error: donorError } = await supabase.rpc("register_public_donor", {
           _name: name.trim(),
           _phone: phone.trim(),
           _blood_group: bloodGroup,
@@ -98,12 +98,10 @@ const Login = () => {
         });
         setLoading(false);
         toast({
-          title: donorError ? "সাইনআপ সম্পন্ন" : donorAdded ? "ধন্যবাদ! 🎉" : "সাইনআপ সম্পন্ন",
+          title: donorError ? "সাইনআপ সম্পন্ন" : "ধন্যবাদ! 🎉",
           description: donorError
             ? "অ্যাকাউন্ট তৈরি হয়েছে, তবে ডোনার তথ্য জমা হয়নি। পরে আবার চেষ্টা করুন।"
-            : donorAdded
-              ? "আপনার সাইনআপ সফল হয়েছে। ইমেইল ভেরিফাই করে লগইন করুন। ❤️"
-              : "অ্যাকাউন্ট তৈরি হয়েছে। এই ফোন নম্বরটি আগে থেকেই ডোনার তালিকায় আছে।",
+            : "আপনার সাইনআপ সফল হয়েছে। ইমেইল ভেরিফাই করে লগইন করুন। ❤️",
         });
         setIsSignup(false);
       }
